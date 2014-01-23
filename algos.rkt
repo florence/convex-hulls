@@ -1,6 +1,6 @@
 #lang typed/racket
-
 (provide gift-wrap)
+(require typed/rackunit)
 
 (define-type Point Complex)
 (define-type Huller ((Listof Point) -> (Listof Point)))
@@ -33,7 +33,7 @@
 (define (more-to-left c b e r)
   (and (not (= c e))
        (not (= c r))
-       (> (angle-from c e r) (angle-from b e r))))
+       (< (angle-from c e r) (angle-from b e r))))
 
 
 (: angle-from : (Point Point Point -> Real))
@@ -42,6 +42,14 @@
   (define point (- n b))
   (- (atan (imag-part point) (real-part point))
      (atan (imag-part base) (real-part base))))
+
+(define half-pi (/ pi 2))
+(check-equal? (angle-from 0+1i 1+0i 0) half-pi)
+(check-equal? (angle-from 1+2i 2+1i 1+1i) half-pi)
+(check-equal? (angle-from 0-1i 0+1i 0) pi)
+(check-equal? (angle-from -1+0i 0+1i 0) half-pi) 
+(check-equal? (angle-from -1+0i 0-1i 0) (* 3/2 pi)) 
+(check-equal? (angle-from 0-1i -1+0i 0) (* 3/2 pi)) 
 
 (: dot : (Complex Complex -> Real))
 (define (dot a b)
