@@ -1,17 +1,24 @@
 #lang racket
 (provide draw/timing draw)
-(require 2htdp/image)
+(require plot)
+
+(define debug (make-parameter #f))
 
 ;; (listof complex) (-> (listof complex) (listof complex)) -> image
 (define (draw/timing points algo)
   (define-values (lhull time _ __) (time-apply algo (list points)))
   (define hull (first lhull))
   (displayln `(got a ,(length hull) hull from ,(length points) points in ,time ms))
+  (when (debug)
+    (displayln `(with hull ,hull))
+    (displayln `(and points ,points)))
   (draw points hull))
 
-(define (draw points hull)
-  (define base (call-with-values (thunk (get-bounds hull)) empty-scene))
-  (draw-points points (draw-hull hull base)))
+(define (draw p hull)
+  (define (to ps) (map (λ (x) (vector (real-part x) (imag-part x))) ps))
+  (plot 
+   (list (points (to p))
+         (lines (to (append hull (list (first hull)))))))) 
 
 ;; (listof complex) -> real real
 (define (get-bounds points)
@@ -23,22 +30,16 @@
   (values (max w h) (max w h)))
 
 
-(define (draw-points points base)
-  (for/fold ([i base]) ([p points])
-    (place-image (circle 5 'solid 'blue)
-                 (real-part p)
-                 (imag-part p)
-                 i)))
+(define (random-data [n 100]) 
+  (for/list ([_ n]) (make-rectangular (random 100) (random 100))))
 
-(define (draw-hull hull base)
-  (if (null? hull)
-      base
-      (let ([hull (append hull (list (first hull)))])
-        (let loop ([hull hull] [base base])
-          (cond [(null? (rest hull)) base]
-                [else
-                 (define x1 (real-part (first hull)))
-                 (define y1 (imag-part (first hull)))
-                 (define x2 (real-part (second hull)))
-                 (define y2 (imag-part (second hull)))
-                 (loop (rest hull) (add-line base x1 y1 x2 y2 'red))])))))
+
+(module+ gift-wrap
+  (require "algos.rkt")
+  (provide test)
+  (define (test)
+    (define data (random-data))
+    (parameterize ([debug #t])
+      (draw/timing data gift-wrap))))
+
+;(define-syntax (run sub) (require (submod "." sub)))
