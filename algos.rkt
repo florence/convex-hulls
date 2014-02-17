@@ -38,16 +38,18 @@
     (define a (angle p))
     (if (= a pi) (- pi) a))
   (and (not (= c e))
-       (or 
-        (= b e)
-        (let* ([b0 (- b e)]
-               [c0 (- c e)]
-               [β  (get-angle b0)]
-               [κ  (get-angle c0)])
-          (displayln `(b0: ,b0 c0: ,c0))
-          (displayln `(κ: ,κ β: ,β))
-          (displayln "")
-          (> κ β)))))
+       (or (= b e)
+           (let* ([b0 (- b e)]
+                  [c0 (- c e)]
+                  [cr
+                   (make-polar (magnitude c0)
+                               (- (angle c0)
+                                  (angle b0)))]
+                  [κ (get-angle cr)])
+             (displayln `(b0: ,b0 c0: ,c0))
+             (displayln `(κ: ,κ))
+             (displayln "")
+             (> κ 0)))))
 
 
 
@@ -68,6 +70,5 @@
   (check-false (more-to-left? 1-10i 1+10i 0) "a")
   (check-false (more-to-left? 1+0i 0+1i 0) "b") 
   (check-true  (more-to-left? 0 10 10-10i) "c"))
-
 
 
