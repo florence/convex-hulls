@@ -46,9 +46,9 @@
                                (- (angle c0)
                                   (angle b0)))]
                   [κ (get-angle cr)])
-             (displayln `(b0: ,b0 c0: ,c0))
-             (displayln `(κ: ,κ))
-             (displayln "")
+             ;(displayln `(b0: ,b0 c0: ,c0))
+             ;(displayln `(κ: ,κ))
+             ;(displayln "")
              (> κ 0)))))
 
 
