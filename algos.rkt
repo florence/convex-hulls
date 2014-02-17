@@ -33,21 +33,27 @@
 
 (: more-to-left? : (Point Point Point -> Boolean))
 (define (more-to-left? c b e)
-  (: get-angle : (Point -> Real))
-  (define (get-angle p)
-    (define a (angle p))
-    (if (= a pi) (- pi) a))
-  (and (not (= c e))
-       (or 
-        (= b e)
-        (let* ([b0 (- b e)]
-               [c0 (- c e)]
-               [β  (get-angle b0)]
-               [κ  (get-angle c0)])
-          (displayln `(b0: ,b0 c0: ,c0))
-          (displayln `(κ: ,κ β: ,β))
-          (displayln "")
-          (> κ β)))))
+  (define (more-to-left* c b)
+    (: get-angle : (Point -> Real))
+    (define (get-angle p)
+      (define a (angle p))
+      (if (= a pi) (- pi) a))
+    (and (not (= c e))
+         (or 
+          (= b e)
+          (let* ([b0 (- b e)]
+                 [c0 (- c e)]
+                 [β  (get-angle b0)]
+                 [κ  (get-angle c0)])
+            (displayln `(b0: ,b0 c0: ,c0))
+            (displayln `(κ: ,κ β: ,β))
+            (displayln "")
+            (> κ β)))))
+  (define n (more-to-left* c b))
+  (define r (more-to-left* b c))
+  (if (= n r)
+      (error 'test "fuck")
+      n))
 
 
 
