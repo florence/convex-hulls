@@ -33,27 +33,21 @@
 
 (: more-to-left? : (Point Point Point -> Boolean))
 (define (more-to-left? c b e)
-  (define (more-to-left* c b)
-    (: get-angle : (Point -> Real))
-    (define (get-angle p)
-      (define a (angle p))
-      (if (= a pi) (- pi) a))
-    (and (not (= c e))
-         (or 
-          (= b e)
-          (let* ([b0 (- b e)]
-                 [c0 (- c e)]
-                 [β  (get-angle b0)]
-                 [κ  (get-angle c0)])
-            (displayln `(b0: ,b0 c0: ,c0))
-            (displayln `(κ: ,κ β: ,β))
-            (displayln "")
-            (> κ β)))))
-  (define n (more-to-left* c b))
-  (define r (more-to-left* b c))
-  (if (= n r)
-      (error 'test "fuck")
-      n))
+  (: get-angle : (Point -> Real))
+  (define (get-angle p)
+    (define a (angle p))
+    (if (= a pi) (- pi) a))
+  (and (not (= c e))
+       (or 
+        (= b e)
+        (let* ([b0 (- b e)]
+               [c0 (- c e)]
+               [β  (get-angle b0)]
+               [κ  (get-angle c0)])
+          (displayln `(b0: ,b0 c0: ,c0))
+          (displayln `(κ: ,κ β: ,β))
+          (displayln "")
+          (> κ β)))))
 
 
 
@@ -70,7 +64,7 @@
   (check-false (more-to-left? -4-10i 0+10i 0) "directly up")
   (check-false (more-to-left? 0+88i 33+18i 96+68i) "up back from example")
   (check-false (more-to-left? -1+1i -1-1i 0) "up back")
-  (check-false (more-to-left? -1-1i -1+1i 0) "up back reversed")
+  (check-true  (more-to-left? -1-1i -1+1i 0) "up back reversed")
   (check-false (more-to-left? 1-10i 1+10i 0) "a")
   (check-false (more-to-left? 1+0i 0+1i 0) "b") 
   (check-true  (more-to-left? 0 10 10-10i) "c"))
