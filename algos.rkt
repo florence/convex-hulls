@@ -49,6 +49,8 @@
           (displayln "")
           (> κ β)))))
 
+
+
 (: normalize : (Point -> Point))
 (define (normalize p)
   (/ p (magnitude p)))
@@ -61,7 +63,8 @@
   (check-false (more-to-left? -5-10i 0-10i 0) "downward line")
   (check-false (more-to-left? -4-10i 0+10i 0) "directly up")
   (check-false (more-to-left? 0+88i 33+18i 96+68i) "up back from example")
-  (check-false (more-to-left? 1-1i -1-1i 0) "up back")
+  (check-false (more-to-left? -1+1i -1-1i 0) "up back")
+  (check-false (more-to-left? -1-1i -1+1i 0) "up back reversed")
   (check-false (more-to-left? 1-10i 1+10i 0) "a")
   (check-false (more-to-left? 1+0i 0+1i 0) "b") 
   (check-true  (more-to-left? 0 10 10-10i) "c"))
