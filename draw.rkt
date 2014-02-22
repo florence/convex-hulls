@@ -1,10 +1,15 @@
-#lang racket
+#lang typed/racket
 (provide draw/timing draw)
-(require plot)
+(require "shared.rkt"
+         (only-in typed/mred/mred Snip%)
+         plot/typed)
 
+(: debug : (Parameterof Any))
 (define debug (make-parameter #f))
 
-;; (listof complex) (-> (listof complex) (listof complex)) -> image
+(define-type Plot (U Void (Instance Snip%)))
+
+(: draw/timing : (Listof Point) Huller -> Plot)
 (define (draw/timing points algo)
   (define-values (lhull time _ __) (time-apply algo (list points)))
   (define hull (first lhull))
@@ -14,25 +19,17 @@
     (displayln `(and points ,points)))
   (draw points hull))
 
+(: draw : (Listof Point) (Listof Point) -> Plot)
 (define (draw p hull)
-  (define (to ps) (map (λ (x) (vector (real-part x) (imag-part x))) ps))
+  (: to : (Listof Point) -> (Listof (Vectorof Real)))
+  (define (to ps) (map (λ ([x : Point]) (vector (real-part x) (imag-part x))) ps))
   (plot 
    (list (points (to p))
          (lines (to (append hull (list (first hull)))))))) 
 
-;; (listof complex) -> real real
-(define (get-bounds points)
-  (define start (first points))
-  (define-values (w h)
-    (for/fold ([w (real-part start)] [h (imag-part start)]) ([p (rest points)])
-      (values (if (< w (real-part p)) (real-part p) w)
-              (if (< h (imag-part p)) (imag-part p) h))))
-  (values (max w h) (max w h)))
-
-
+(: random-data : (->* () (Natural) (Listof Point)))
 (define (random-data [n 100]) 
   (for/list ([_ n]) (make-rectangular (random 100) (random 100))))
-
 
 (module+ gift-wrap
   (require "algos.rkt")

@@ -1,13 +1,8 @@
 #lang typed/racket
 (provide gift-wrap)
-(require typed/rackunit)
+(require "shared.rkt" typed/rackunit)
 
-(define-type Point Complex)
-(define-type Huller
-  (->* ((Listof Point)) (((Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Void))
-       (Listof Point)))
-
-;; gift-wrapping
+; gift-wrapping
 (: gift-wrap : Huller)
 (define (gift-wrap points [drawer! void])
   (ann points (Listof Point))
