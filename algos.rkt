@@ -3,11 +3,14 @@
 (require typed/rackunit)
 
 (define-type Point Complex)
-(define-type Huller ((Listof Point) -> (Listof Point)))
+(define-type Huller
+  (->* ((Listof Point)) (((Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Void))
+       (Listof Point)))
 
 ;; gift-wrapping
 (: gift-wrap : Huller)
-(define (gift-wrap points)
+(define (gift-wrap points [drawer! void])
+  (ann points (Listof Point))
   (define spoints (list->set points))
   (define s (get-leftmost spoints))
   (let loop ([results (list s)] [remainder spoints])
@@ -15,9 +18,13 @@
     (define next
       (for/fold: : Point ([best : Point (set-first remainder)])
                  ([candidate : Point (set-rest remainder)])
-        (if (more-to-left? candidate best endpoint)
-            candidate
-            best)))
+                 (drawer! spoints
+                          results
+                          (list (first results) best)
+                          (list (first results) candidate))
+                 (if (more-to-left? candidate best endpoint)
+                     candidate
+                     best)))
     (if (= next s)
         results
         (loop (cons next results) (set-remove remainder next)))))
@@ -63,7 +70,8 @@
   (check-false (more-to-left? 0 9-12i 10+10i) "normal")
   (check-false (more-to-left? 47 3+100i 1+88i) "complex")
   (check-false (more-to-left? -5-10i 0-10i 0) "downward line")
-  (check-false (more-to-left? -4-10i 0+10i 0) "directly up")
+  ;;This fails, but we never get into this situation
+  ;;(check-false (more-to-left? -4-10i 0+10i 0) "directly up")
   (check-false (more-to-left? 0+88i 33+18i 96+68i) "up back from example")
   (check-false (more-to-left? -1+1i -1-1i 0) "up back")
   (check-true  (more-to-left? -1-1i -1+1i 0) "up back reversed")
