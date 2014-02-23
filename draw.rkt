@@ -8,7 +8,6 @@
 (: debug : (Parameterof Any))
 (define debug (make-parameter #f))
 
-;; We never generate Voids, but we need TR to play nice
 (define-type Plot (Instance Snip%))
 
 (: draw/timing : (Listof Point) Huller -> (Listof Plot))
