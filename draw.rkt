@@ -2,30 +2,53 @@
 (provide draw/timing draw)
 (require "shared.rkt"
          (only-in typed/mred/mred Snip%)
-         plot/typed)
+         plot/typed
+         plot/typed/utils)
 
 (: debug : (Parameterof Any))
 (define debug (make-parameter #f))
 
 (define-type Plot (U Void (Instance Snip%)))
 
-(: draw/timing : (Listof Point) Huller -> Plot)
+(: draw/timing : (Listof Point) Huller -> (Listof Plot))
 (define (draw/timing points algo)
-  (define-values (lhull time _ __) (time-apply algo (list points)))
+  (: frames : (Boxof (Listof (Instance Snip%))))
+  (define frames (box null))
+  (define draw! (make-draw! frames))
+  (define-values (lhull time _ __) (time-apply algo (list points draw!)))
   (define hull (first lhull))
   (displayln `(got a ,(length hull) hull from ,(length points) points in ,time ms))
   (when (debug)
     (displayln `(with hull ,hull))
     (displayln `(and points ,points)))
-  (draw points hull))
+  (define v (draw points hull))
+  ((inst append (Instance Snip%)) (if (void? v) null (list v)) (unbox frames)))
+
+(: make-draw! : (Boxof (Listof (Instance Snip%))) -> FrameDrawer)
+(define (make-draw! b)
+  (λ (pts known . check)
+     (define colors (build-list (length check) (λ ([x : Integer]) x)))
+     (define v
+       (plot
+        (list* (points (points->vectors pts))
+               (lines (points->vectors known))
+               (map (λ ([x : (Sequenceof Point)] [c : Integer])
+                       (lines (points->vectors x) #:color c))
+                    check
+                    colors))))
+     (when (not (void? v))
+       (set-box! b (cons v (unbox b))))))
 
 (: draw : (Listof Point) (Listof Point) -> Plot)
 (define (draw p hull)
-  (: to : (Listof Point) -> (Listof (Vectorof Real)))
-  (define (to ps) (map (λ ([x : Point]) (vector (real-part x) (imag-part x))) ps))
   (plot 
-   (list (points (to p))
-         (lines (to (append hull (list (first hull)))))))) 
+   (list (points (points->vectors p))
+         (lines (points->vectors (append hull (list (first hull)))))))) 
+
+(: points->vectors : (Sequenceof Point) -> (Listof (Vectorof Real)))
+(define (points->vectors ps)
+  (for/list ([p ps])
+    (vector (real-part p) (imag-part p))))
 
 (: random-data : (->* () (Natural) (Listof Point)))
 (define (random-data [n 100]) 
@@ -38,5 +61,3 @@
     (define data (random-data))
     (parameterize ([debug #t])
       (draw/timing data gift-wrap))))
-
-;(define-syntax (run sub) (require (submod "." sub)))
