@@ -1,5 +1,5 @@
 #lang typed/racket
-(provide draw/timing draw)
+(provide draw/timing)
 (require "shared.rkt"
          (only-in typed/mred/mred Snip%)
          plot/typed
@@ -8,11 +8,12 @@
 (: debug : (Parameterof Any))
 (define debug (make-parameter #f))
 
-(define-type Plot (U Void (Instance Snip%)))
+;; We never generate Voids, but we need TR to play nice
+(define-type Plot (Instance Snip%))
 
 (: draw/timing : (Listof Point) Huller -> (Listof Plot))
 (define (draw/timing points algo)
-  (: frames : (Boxof (Listof (Instance Snip%))))
+  (: frames : (Boxof (Listof Plot)))
   (define frames (box null))
   (define draw! (make-draw! frames))
   (define-values (lhull time _ __) (time-apply algo (list points draw!)))
@@ -24,7 +25,7 @@
   (define v (draw points hull))
   ((inst append (Instance Snip%)) (if (void? v) null (list v)) (unbox frames)))
 
-(: make-draw! : (Boxof (Listof (Instance Snip%))) -> FrameDrawer)
+(: make-draw! : (Boxof (Listof Plot)) -> FrameDrawer)
 (define (make-draw! b)
   (λ (pts known . check)
      (define colors (build-list (length check) (λ ([x : Integer]) x)))
@@ -41,18 +42,16 @@
 
 (: draw : (Listof Point) (Listof Point) -> Plot)
 (define (draw p hull)
-  (plot 
-   (list (points (points->vectors p))
-         (lines (points->vectors (append hull (list (first hull)))))))) 
+  (define v
+    (plot 
+     (list (points (points->vectors p))
+           (lines (points->vectors (append hull (list (first hull))))))))
+  (if (not (void? v)) v (error 'internal "should never get here"))) 
 
 (: points->vectors : (Sequenceof Point) -> (Listof (Vectorof Real)))
 (define (points->vectors ps)
   (for/list ([p ps])
     (vector (real-part p) (imag-part p))))
-
-(: random-data : (->* () (Natural) (Listof Point)))
-(define (random-data [n 100]) 
-  (for/list ([_ n]) (make-rectangular (random 100) (random 100))))
 
 (module+ gift-wrap
   (require "algos.rkt")

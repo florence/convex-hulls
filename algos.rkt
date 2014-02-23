@@ -1,5 +1,5 @@
 #lang typed/racket
-(provide gift-wrap)
+(provide gift-wrap random-data)
 (require "shared.rkt" typed/rackunit)
 
 ; gift-wrapping
@@ -75,3 +75,6 @@
   (check-true  (more-to-left? 0 10 10-10i) "c"))
 
 
+(: random-data : (->* () (Natural) (Listof Point)))
+(define (random-data [n 100]) 
+  (for/list ([_ n]) (make-rectangular (random 100) (random 100))))
