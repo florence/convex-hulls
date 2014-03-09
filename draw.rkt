@@ -10,34 +10,59 @@
 
 (define-type Plot (Instance Snip%))
 
-(: draw/timing : (Listof Point) Huller -> (Listof Plot))
-(define (draw/timing points algo)
-  (: frames : (Boxof (Listof Plot)))
-  (define frames (box null))
-  (define draw! (make-draw! frames))
-  (define-values (lhull time _ __) (time-apply algo (list points draw!)))
-  (define hull (first lhull))
-  (displayln `(got a ,(length hull) hull from ,(length points) points in ,time ms))
-  (when (debug)
-    (displayln `(with hull ,hull))
-    (displayln `(and points ,points)))
-  (define v (draw points hull))
-  ((inst append (Instance Snip%)) (if (void? v) null (list v)) (unbox frames)))
+(define call/comp call-with-composable-continuation)
 
-(: make-draw! : (Boxof (Listof Plot)) -> FrameDrawer)
-(define (make-draw! b)
-  (λ (pts known . check)
-     (define colors (build-list (length check) (λ ([x : Integer]) x)))
-     (define v
-       (plot
-        (list* (points (points->vectors pts))
-               (lines (points->vectors known))
-               (map (λ ([x : (Sequenceof Point)] [c : Integer])
-                       (lines (points->vectors x) #:color c))
-                    check
-                    colors))))
-     (when (not (void? v))
-       (set-box! b (cons v (unbox b))))))
+(: draw/timing : (Listof Point) Huller -> (-> Plot))
+(define (draw/timing points algo)
+  (: return-tag : (Prompt-Tagof Plot (Plot -> Plot)))
+  (define return-tag (make-continuation-prompt-tag 'render-return))
+  (define-type K (Void -> Plot))
+  (: bnext : (Boxof  (U #f K)))
+  (define bnext (box #f))
+  (: launch : (-> Plot) -> Plot)
+  (define (launch t)
+    (call-with-continuation-prompt t return-tag (ann values (-> Plot Plot))))
+  (lambda () 
+    (: next : (U #f K))
+    (define next (unbox bnext))
+    (cond
+     [next (launch (thunk (next (void))))]
+     [else 
+      (: draw! : FrameDrawer)
+      (define (draw! pts known . check)
+        (define p (apply render pts known check))
+        (call/comp
+         (lambda ([k : K])
+           (set-box! bnext k)
+           (abort-current-continuation return-tag p))
+         return-tag))
+      (launch
+       (lambda () : Plot
+               (define-values (lhull time _ __) (time-apply algo (list points draw!)))
+               (define hull (first lhull))
+               (displayln `(got a ,(length hull) hull from ,(length points) points in ,time ms))
+               (when (debug)
+                 (displayln `(with hull ,hull))
+                 (displayln `(and points ,points)))
+               (define v (draw points hull))
+               (call/comp (lambda ([k : K]) (set-box! bnext k))
+                        return-tag)
+               (if (not (void? v)) v (error 'internal "should never get here"))))])))
+
+(: render : (Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Plot)
+(define (render pts known . check)
+  (define colors (build-list (length check) (λ ([x : Integer]) x)))
+  (define v
+    (plot
+     (list* (points (points->vectors pts))
+            (lines (points->vectors known))
+            (map (λ ([x : (Sequenceof Point)] [c : Integer])
+                    (lines (points->vectors x) #:color c))
+                 check
+                 colors))))
+  (if (not (void? v))
+      v
+      (error 'internal "should never get here")))
 
 (: draw : (Listof Point) (Listof Point) -> Plot)
 (define (draw p hull)

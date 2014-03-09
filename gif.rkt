@@ -4,14 +4,14 @@
 (require "draw.rkt" "algos.rkt" 2htdp/image 2htdp/universe)
 
 
-(define (render path data huller [seconds 10])
-  (define frames (reverse (draw/timing data huller)))
-  (define seconds/frame (/ seconds (length frames)))
-  (big-bang frames
+(define (render path data huller)
+  (define draw (draw/timing data huller))
+  (big-bang (draw)
             [record? path]
-            [on-tick rest seconds/frame]
-            [stop-when (compose null? rest)]
-            [to-draw (compose coerce first)]))
-
-(define (coerce i)
-  (rotate 0 i))
+            [on-tick
+             (lambda (f)
+               (let ([n (draw)])
+                 ((if (eq? n f) stop-with values) n)))
+             .1]
+            ;; an ugly hack to coerse to big-bang image
+            [to-draw (curry rotate 0)]))
