@@ -11,7 +11,7 @@
             [on-tick
              (lambda (f)
                (let ([n (draw)])
-                 ((if (eq? n f) stop-with values) n)))
+                 (if n n (stop-with f))))
              .1]
             ;; an ugly hack to coerse to big-bang image
             [to-draw (curry rotate 0)]))

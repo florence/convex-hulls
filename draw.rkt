@@ -1,5 +1,5 @@
 #lang typed/racket
-(provide draw/timing)
+(provide draw/timing debug)
 (require "shared.rkt"
          (only-in typed/mred/mred Snip%)
          plot/typed
@@ -12,16 +12,16 @@
 
 (define call/comp call-with-composable-continuation)
 
-(: draw/timing : (Listof Point) Huller -> (-> Plot))
+(: draw/timing : (Listof Point) Huller -> (-> (Option Plot)))
 (define (draw/timing points algo)
-  (: return-tag : (Prompt-Tagof Plot (Plot -> Plot)))
+  (: return-tag : (Prompt-Tagof (Option Plot) ((Option Plot) -> (Option Plot))))
   (define return-tag (make-continuation-prompt-tag 'render-return))
-  (define-type K (Void -> Plot))
+  (define-type K (Void -> (Option Plot)))
   (: bnext : (Boxof  (U #f K)))
   (define bnext (box #f))
-  (: launch : (-> Plot) -> Plot)
+  (: launch : (-> (Option Plot)) -> (Option Plot))
   (define (launch t)
-    (call-with-continuation-prompt t return-tag (ann values (-> Plot Plot))))
+    (call-with-continuation-prompt t return-tag (ann values (-> (Option Plot) (Option Plot)))))
   (lambda () 
     (: next : (U #f K))
     (define next (unbox bnext))
@@ -37,17 +37,15 @@
            (abort-current-continuation return-tag p))
          return-tag))
       (launch
-       (lambda () : Plot
+       (lambda () : False
                (define-values (lhull time _ __) (time-apply algo (list points draw!)))
                (define hull (first lhull))
                (displayln `(got a ,(length hull) hull from ,(length points) points in ,time ms))
                (when (debug)
                  (displayln `(with hull ,hull))
                  (displayln `(and points ,points)))
-               (define v (draw points hull))
-               (call/comp (lambda ([k : K]) (set-box! bnext k))
-                        return-tag)
-               (if (not (void? v)) v (error 'internal "should never get here"))))])))
+               (draw! points `(,@hull ,(first hull)))
+               #f))])))
 
 (: render : (Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Plot)
 (define (render pts known . check)
