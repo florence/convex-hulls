@@ -9,43 +9,46 @@
 (define debug (make-parameter #f))
 
 (define-type Plot (Instance Snip%))
+(define-type OPlot (Option Plot))
+(define-type K (Void -> OPlot))
 
-(define call/comp call-with-composable-continuation)
+(: return-tag : (Prompt-Tagof OPlot (OPlot -> OPlot)))
+(define return-tag (make-continuation-prompt-tag 'render))
 
-(: draw/timing : (Listof Point) Huller -> (-> (Option Plot)))
-(define (draw/timing points algo)
-  (: return-tag : (Prompt-Tagof (Option Plot) ((Option Plot) -> (Option Plot))))
-  (define return-tag (make-continuation-prompt-tag 'render-return))
-  (define-type K (Void -> (Option Plot)))
-  (: bnext : (Boxof  (U #f K)))
-  (define bnext (box #f))
-  (: launch : (-> (Option Plot)) -> (Option Plot))
-  (define (launch t)
-    (call-with-continuation-prompt t return-tag (ann values (-> (Option Plot) (Option Plot)))))
+(: draw/timing : (Listof Point) Huller -> (-> OPlot))
+(define (draw/timing pts algo)
+  (define bnext : (Boxof (Option K))
+    (box #f))
+  (define draw! (make-draw! bnext))
+  (: launch : (-> OPlot) -> OPlot)
+  (define (launch t) 
+    (call-with-continuation-prompt t return-tag (ann values (OPlot -> OPlot))))
   (lambda () 
-    (: next : (U #f K))
-    (define next (unbox bnext))
-    (cond
-     [next (launch (thunk (next (void))))]
-     [else 
-      (: draw! : FrameDrawer)
-      (define (draw! pts known . check)
-        (define p (apply render pts known check))
-        (call/comp
-         (lambda ([k : K])
-           (set-box! bnext k)
-           (abort-current-continuation return-tag p))
-         return-tag))
-      (launch
-       (lambda () : False
-               (define-values (lhull time _ __) (time-apply algo (list points draw!)))
-               (define hull (first lhull))
-               (displayln `(got a ,(length hull) hull from ,(length points) points in ,time ms))
-               (when (debug)
-                 (displayln `(with hull ,hull))
-                 (displayln `(and points ,points)))
-               (draw! points `(,@hull ,(first hull)))
-               #f))])))
+    (define next : (Option K)
+      (unbox bnext))
+    (launch 
+     (cond
+      [next (thunk (next (void)))]
+      [else
+       (lambda () 
+         (define-values (lhull time _ __) (time-apply algo (list pts draw!)))
+         (define hull (first lhull))
+         (when (debug)
+           (displayln `(got a ,(length hull) hull from ,(length pts) points in ,time ms))
+           (displayln `(with hull ,hull))
+           (displayln `(and points ,pts)))
+         (draw! pts `(,@hull ,(first hull)))
+         #f)]))))
+
+(: make-draw! : ((Boxof (Option K)) -> FrameDrawer))
+(define ((make-draw! bnext) pts known . check) 
+  (define p (apply render pts known check))
+  (call-with-composable-continuation
+   (lambda ([k : K])
+     (set-box! bnext k)
+     (abort-current-continuation return-tag p))
+   return-tag))
+
 
 (: render : (Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Plot)
 (define (render pts known . check)
@@ -61,14 +64,6 @@
   (if (not (void? v))
       v
       (error 'internal "should never get here")))
-
-(: draw : (Listof Point) (Listof Point) -> Plot)
-(define (draw p hull)
-  (define v
-    (plot 
-     (list (points (points->vectors p))
-           (lines (points->vectors (append hull (list (first hull))))))))
-  (if (not (void? v)) v (error 'internal "should never get here"))) 
 
 (: points->vectors : (Sequenceof Point) -> (Listof (Vectorof Real)))
 (define (points->vectors ps)
