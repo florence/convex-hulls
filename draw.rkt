@@ -49,10 +49,15 @@
      (abort-current-continuation return-tag p))
    return-tag))
 
-
 (: render : (Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Plot)
 (define (render pts known . check)
-  (define colors (build-list (length check) (λ ([x : Integer]) x)))
+  (define colors (build-list (length check) (λ ([x : Integer]) (* 2 x))))
+  (define xmax (apply max (map real-part (sequence->list pts))))
+  (define ymax (apply max (map imag-part (sequence->list pts))))
+  (define xmin (apply min (map real-part (sequence->list pts))))
+  (define ymin (apply min (map imag-part (sequence->list pts))))  
+  (define xshift (* .2 (- xmax xmin)))
+  (define yshift (* .2 (- ymax ymin)))
   (define v
     (plot
      (list* (points (points->vectors pts))
@@ -60,7 +65,11 @@
             (map (λ ([x : (Sequenceof Point)] [c : Integer])
                     (lines (points->vectors x) #:color c))
                  check
-                 colors))))
+                 colors))
+     #:x-max (+ xmax xshift)
+     #:y-max (+ ymax yshift)
+     #:x-min (- xmin xshift) 
+     #:y-min (- ymin yshift)))
   (if (not (void? v))
       v
       (error 'internal "should never get here")))
