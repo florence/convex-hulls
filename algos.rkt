@@ -77,9 +77,9 @@
   (for/list ([_ n]) (random-point)))
 
 (define BOUND 100)
-(define d (normal-dist))
+(define d (normal-dist (/ BOUND 2) 25))
 (: random-point : (-> Point))
 (define (random-point)
   (define xs (sample d))
   (define ys (sample d))
-  (make-rectangular (* BOUND xs) (* BOUND ys)))
+  (make-rectangular xs ys))
