@@ -1,14 +1,14 @@
 #lang typed/racket
-(provide draw/timing debug)
-(require "shared.rkt"
-         (only-in typed/mred/mred Snip%)
-         plot/typed
+(provide draw/timing debug OPlot Plot)
+(require "algos/shared.rkt"
+         (only-in typed/mred/mred Bitmap%)
+         plot/typed/bitmap
          plot/typed/utils)
 
 (: debug : (Parameterof Any))
 (define debug (make-parameter #f))
 
-(define-type Plot (Instance Snip%))
+(define-type Plot (Instance Bitmap%))
 (define-type OPlot (Option Plot))
 (define-type K (Void -> OPlot))
 
@@ -34,9 +34,10 @@
          (define-values (lhull time _ __) (time-apply algo (list pts draw!)))
          (define hull (first lhull))
          (when (debug)
-           (displayln `(got a ,(length hull) hull from ,(length pts) points in ,time ms))
-           (displayln `(with hull ,hull))
-           (displayln `(and points ,pts)))
+           (parameterize ([current-output-port (current-error-port)])
+             (displayln `(got a ,(length hull) hull from ,(length pts) points in ,time ms))
+             (displayln `(with hull ,hull))
+             (displayln `(and points ,pts))))
          (draw! pts `(,@hull ,(first hull)))
          #f)]))))
 
@@ -79,8 +80,10 @@
   (for/list ([p ps])
     (vector (real-part p) (imag-part p))))
 
+;; disabled because of submodule expansion bug
+#;
 (module+ gift-wrap
-  (require "algos.rkt")
+  (require "algos/gift-wrap.rkt")
   (provide test)
   (define (test)
     (define data (random-data))

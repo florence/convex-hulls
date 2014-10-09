@@ -1,6 +1,6 @@
 #lang typed/racket
 (provide gift-wrap random-data)
-(require "shared.rkt" typed/rackunit math/distributions)
+(require "shared.rkt" typed/rackunit)
 
 ; gift-wrapping
 (: gift-wrap : Huller)
@@ -50,8 +50,6 @@
                   [κ (get-angle cr)])
              (> κ 0)))))
 
-
-
 (: normalize : (Point -> Point))
 (define (normalize p)
   (/ p (magnitude p)))
@@ -71,15 +69,3 @@
   (check-false (more-to-left? 1+0i 0+1i 0) "b") 
   (check-true  (more-to-left? 0 10 10-10i) "c"))
 
-
-(: random-data : (->* () (Natural) (Listof Point)))
-(define (random-data [n 100]) 
-  (for/list ([_ n]) (random-point)))
-
-(define BOUND 100)
-(define d (normal-dist (/ BOUND 2) 25))
-(: random-point : (-> Point))
-(define (random-point)
-  (define xs (sample d))
-  (define ys (sample d))
-  (make-rectangular xs ys))
