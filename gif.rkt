@@ -5,12 +5,13 @@
 
 (define DELAY 10);/100ths of a second
 
-(: render : String (Listof Point) Huller -> Void)
+(: render : (case-> [String (Listof Point) Huller -> Void]
+                    [String (Listof Point) Huller Natural -> Void]))
 ;; A lot of this code is stolen from file/gif
-(define (render path data huller)
+(define (render path data huller [delay DELAY])
   (define draw (draw/timing data huller))
   (call-with-output-file*
-   path
+   path #:exists 'replace
    (lambda ([p : Output-Port])
      (define first (draw))
      (cond 
@@ -36,7 +37,7 @@
                  (send mask get-argb-pixels 0 0 w h argb #t))
                (quantize argb)))
            (define next (draw))
-           (gif-add-control stream 'any #f (if next DELAY (* DELAY 10)) transparent)
+           (gif-add-control stream 'any #f (if next delay (* delay 10)) transparent)
            (gif-add-image stream 0 0 w h #f colormap pxls)
            (loop next)))
        (when (debug)

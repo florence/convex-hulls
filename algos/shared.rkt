@@ -1,6 +1,7 @@
 #lang typed/racket
 (provide Point Huller FrameDrawer
-         random-data random-point)
+         random-data random-point
+         .x .y)
 (require math/distributions)
 (define-type Point Complex)
 (define-type Huller
@@ -26,3 +27,6 @@
   (define xs (sample d))
   (define ys (sample d))
   (make-rectangular xs ys))
+
+(define .x real-part)
+(define .y imag-part)
