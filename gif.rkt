@@ -35,9 +35,10 @@
                (when mask
                  (send mask get-argb-pixels 0 0 w h argb #t))
                (quantize argb)))
-           (gif-add-control stream 'any #f DELAY transparent)
+           (define next (draw))
+           (gif-add-control stream 'any #f (if next DELAY (* DELAY 10)) transparent)
            (gif-add-image stream 0 0 w h #f colormap pxls)
-           (loop (draw))))
+           (loop next)))
        (when (debug)
          (displayln "end" (current-error-port)))
        (gif-end stream)]))))

@@ -9,10 +9,15 @@
 (define-type FrameDrawer
   ((Sequenceof Point) (Sequenceof Point) (Sequenceof Point) * -> Void))
 
-
 (: random-data : (->* () (Natural) (Listof Point)))
 (define (random-data [n 100]) 
-  (for/list ([_ n]) (random-point)))
+  (for*/fold ([r : (Listof Point) (list (random-point))])
+             ([_ n]
+              [p (in-value (random-point))]
+              #:unless (ormap (lambda ([r : Point])
+                                ((magnitude (- r p)) . < . 5))
+                              r))
+    (cons p r)))
 
 (define BOUND 100)
 (define d (normal-dist (/ BOUND 2) 25))

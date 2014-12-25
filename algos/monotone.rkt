@@ -10,9 +10,9 @@
   (define upper
     (build-side (reverse sorted) 
                 (ann (lambda (a b . c) 
-                       (apply drawer! a (sequence-append b lower) c))
+                       (apply drawer! a b (append c (list lower))))
                      FrameDrawer)))
-  (append lower upper))
+  (append (rest lower) (rest upper)))
 
 (: order : (Listof Point) -> (Listof Point))
 (define (order points)
@@ -32,7 +32,7 @@
 (define (build-side points drawer!)
   (let loop ([pts : (Listof Point) points] [results : (Listof Point) null])
     (match pts
-      [(list) (rest results)]
+      [(list) results]
       [(cons x r)
        (drawer! points results
                 (list* x (if (null? results) null (list (first results)))))
