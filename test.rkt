@@ -8,6 +8,6 @@
   [(or "g" "gift-wrap" "gift-wrap")
    (render "/tmp/gif.gif" (random-data) gift-wrap)]
   [(or "m" "monotone")
-   (render "/tmp/gif.gif") (random-data) monotone]
+   (render "/tmp/gif.gif" (random-data) monotone)]
   [(or "q" "quickhull" "quick-hull")
    (render "/tmp/gif.gif" (random-data 200) quickhull 20)])
