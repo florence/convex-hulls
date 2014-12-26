@@ -3,11 +3,17 @@
 (require "gif.rkt" "algos/gift-wrap.rkt" "algos/shared.rkt"
          "algos/monotone.rkt" "algos/quickhull.rkt")
 
-(define v (string-downcase (command-line #:args (type) type)))
+(define file "/tmp/gif.rkt")
+(define v 
+  (command-line 
+   #:once-each
+   [("-f" "--file") f "file to output to. defaults to /tmp/gif.gif"
+    (set! file f)]
+   #:args (type) (string-downcase type)))
 (match v
   [(or "g" "gift-wrap" "gift-wrap")
-   (render "/tmp/gif.gif" (random-data) gift-wrap)]
+   (render f (random-data) gift-wrap)]
   [(or "m" "monotone")
-   (render "/tmp/gif.gif" (random-data) monotone)]
+   (render f (random-data) monotone 20)]
   [(or "q" "quickhull" "quick-hull")
-   (render "/tmp/gif.gif" (random-data 200) quickhull 20)])
+   (render f (random-data 200) quickhull 20)])
