@@ -5,8 +5,8 @@
            "algos/monotone.rkt" "algos/quickhull.rkt")
 
   (define file "/tmp/gif.rkt")
-  (define v 
-    (command-line 
+  (define v
+    (command-line
      #:once-each
      [("-f" "--file") f "file to output to. defaults to /tmp/gif.gif"
       (set! file f)]
