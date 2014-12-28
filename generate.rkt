@@ -12,8 +12,8 @@
    #:args (type) (string-downcase type)))
 (match v
   [(or "g" "gift-wrap" "gift-wrap")
-   (render f (random-data) gift-wrap)]
+   (render file (random-data) gift-wrap)]
   [(or "m" "monotone")
-   (render f (random-data) monotone 20)]
+   (render file (random-data) monotone 20)]
   [(or "q" "quickhull" "quick-hull")
-   (render f (random-data 200) quickhull 20)])
+   (render file (random-data 200) quickhull 20)])
