@@ -17,6 +17,8 @@ before_install:
   - export PATH="${RACKET_DIR}/bin:${PATH}"
 
 install:
+  - git clone https://github.com/florence/cover ../cover
+  - raco pkg install ../cover/
   - raco pkg install --deps search-auto cover-coveralls
 
 script:
