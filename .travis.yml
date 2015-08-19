@@ -4,7 +4,6 @@ env:
   global:
     - RACKET_DIR=~/racket
   matrix:
-    - RACKET_VERSION=6.1.1
     - RACKET_VERSION=6.2
     - RACKET_VERSION=HEAD
     
@@ -19,6 +18,7 @@ before_install:
 install:
   - git clone https://github.com/florence/cover ../cover
   - raco pkg install --deps search-auto ../cover/
+  - raco pkg install --deps search-auto pfd
   - raco pkg install --deps search-auto cover-coveralls
 
 script:
