@@ -22,5 +22,5 @@ install:
   - raco pkg install --deps search-auto cover-coveralls
 
 script:
- - raco test -Q $TRAVIS_BUILD_DIR
+ - raco test $TRAVIS_BUILD_DIR
  - raco cover -f coveralls -d $TRAVIS_BUILD_DIR/coverage -b $TRAVIS_BUILD_DIR
