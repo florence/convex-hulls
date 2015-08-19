@@ -18,7 +18,7 @@ before_install:
 install:
   - git clone https://github.com/florence/cover ../cover
   - raco pkg install --deps search-auto ../cover/
-  - raco pkg install --deps search-auto pfd
+  - raco pkg install --deps search-auto pfds
   - raco pkg install --deps search-auto cover-coveralls
 
 script:
